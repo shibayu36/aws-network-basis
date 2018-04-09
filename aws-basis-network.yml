@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  # 全てを入れるVPC
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: "10.0.0.0/16"
+      EnableDnsSupport: true
+      EnableDnsHostnames: false
+      InstanceTenancy: "default"
+      Tags:
+        - Key: "Name"
+          Value: "aws-network-basis-cfn"
+
+  # VPC内でインターネットに公開するサブネット
+  PublicSubnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      CidrBlock: "10.0.1.0/24"
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: "Name"
+          Value: "aws-network-basis-cfn-public"
+      VpcId: !Ref VPC
+
+  # VPCで使うインターネットゲートウェイ
+  InternetGateway:
+    Type: "AWS::EC2::InternetGateway"
+    Properties:
+      Tags:
+      - Key: "Name"
+        Value: "aws-network-basis-cfn-gateway"
+  AttachGateway:
+    Type: "AWS::EC2::VPCGatewayAttachment"
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  # パブリックサブネットがインターネットに繋がるようにする
+  PublicRouteTable:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "aws-network-basis-cfn-public-route"
+  AddInternetGatewayToPublicRouteTable:
+    Type: "AWS::EC2::Route"
+    DependsOn: AttachGateway
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+      RouteTableId: !Ref PublicRouteTable
+  AttachPublicRouteTableToPublicSubnet:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet
