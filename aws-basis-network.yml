@@ -30,3 +30,22 @@ Resources:
     Properties:
       InternetGatewayId: !Ref MyInternetGateway
       VpcId: !Ref MyVPC
+  PublicRouteTable:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref MyVPC
+      Tags:
+        - Key: Name
+          Value: "aws-network-basis-cfn-public-route"
+  AddInternetGatewayToPublicRouteTable:
+    Type: "AWS::EC2::Route"
+    DependsOn: AttachGateway
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref MyInternetGateway
+      RouteTableId: !Ref PublicRouteTable
+  AttachPublicRouteTableToPublicSubnet:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref MyPublicSubnet
