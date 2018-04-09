@@ -10,3 +10,12 @@ Resources:
       Tags:
         - Key: "Name"
           Value: "aws-network-basis-cfn"
+  MyPublicSubnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      CidrBlock: "10.0.1.0/24"
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: "Name"
+          Value: "aws-network-basis-cfn-public"
+      VpcId: !Ref MyVPC
