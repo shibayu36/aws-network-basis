@@ -1,5 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Resources:
+  # 全てを入れるVPC
   VPC:
     Type: AWS::EC2::VPC
     Properties:
@@ -10,6 +11,8 @@ Resources:
       Tags:
         - Key: "Name"
           Value: "aws-network-basis-cfn"
+
+  # VPC内でインターネットに公開するサブネット
   PublicSubnet:
     Type: "AWS::EC2::Subnet"
     Properties:
@@ -19,6 +22,8 @@ Resources:
         - Key: "Name"
           Value: "aws-network-basis-cfn-public"
       VpcId: !Ref VPC
+
+  # VPCで使うインターネットゲートウェイ
   InternetGateway:
     Type: "AWS::EC2::InternetGateway"
     Properties:
@@ -30,6 +35,8 @@ Resources:
     Properties:
       InternetGatewayId: !Ref InternetGateway
       VpcId: !Ref VPC
+
+  # パブリックサブネットがインターネットに繋がるようにする
   PublicRouteTable:
     Type: "AWS::EC2::RouteTable"
     Properties:
