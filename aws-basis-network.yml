@@ -19,3 +19,14 @@ Resources:
         - Key: "Name"
           Value: "aws-network-basis-cfn-public"
       VpcId: !Ref MyVPC
+  MyInternetGateway:
+    Type: "AWS::EC2::InternetGateway"
+    Properties:
+      Tags:
+      - Key: "Name"
+        Value: "aws-network-basis-cfn-gateway"
+  AttachGateway:
+    Type: "AWS::EC2::VPCGatewayAttachment"
+    Properties:
+      InternetGatewayId: !Ref MyInternetGateway
+      VpcId: !Ref MyVPC
