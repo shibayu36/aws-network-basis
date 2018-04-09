@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Resources:
-  MyVPC:
+  VPC:
     Type: AWS::EC2::VPC
     Properties:
       CidrBlock: "10.0.0.0/16"
@@ -10,7 +10,7 @@ Resources:
       Tags:
         - Key: "Name"
           Value: "aws-network-basis-cfn"
-  MyPublicSubnet:
+  PublicSubnet:
     Type: "AWS::EC2::Subnet"
     Properties:
       CidrBlock: "10.0.1.0/24"
@@ -18,8 +18,8 @@ Resources:
       Tags:
         - Key: "Name"
           Value: "aws-network-basis-cfn-public"
-      VpcId: !Ref MyVPC
-  MyInternetGateway:
+      VpcId: !Ref VPC
+  InternetGateway:
     Type: "AWS::EC2::InternetGateway"
     Properties:
       Tags:
@@ -28,12 +28,12 @@ Resources:
   AttachGateway:
     Type: "AWS::EC2::VPCGatewayAttachment"
     Properties:
-      InternetGatewayId: !Ref MyInternetGateway
-      VpcId: !Ref MyVPC
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
   PublicRouteTable:
     Type: "AWS::EC2::RouteTable"
     Properties:
-      VpcId: !Ref MyVPC
+      VpcId: !Ref VPC
       Tags:
         - Key: Name
           Value: "aws-network-basis-cfn-public-route"
@@ -42,10 +42,10 @@ Resources:
     DependsOn: AttachGateway
     Properties:
       DestinationCidrBlock: 0.0.0.0/0
-      GatewayId: !Ref MyInternetGateway
+      GatewayId: !Ref InternetGateway
       RouteTableId: !Ref PublicRouteTable
   AttachPublicRouteTableToPublicSubnet:
     Type: "AWS::EC2::SubnetRouteTableAssociation"
     Properties:
       RouteTableId: !Ref PublicRouteTable
-      SubnetId: !Ref MyPublicSubnet
+      SubnetId: !Ref PublicSubnet
