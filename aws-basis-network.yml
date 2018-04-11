@@ -56,3 +56,17 @@ Resources:
     Properties:
       RouteTableId: !Ref PublicRouteTable
       SubnetId: !Ref PublicSubnet
+
+  # Web用のセキュリティグループ
+  SecurityGroupForWebServer:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupName: "aws-network-basis-cfn-web-sg"
+      GroupDescription: "aws-network-basis-cfn SecurityGroup for web-server instance in public-subnet"
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          Description: "SSH"
+          FromPort: 22
+          IpProtocol: "tcp"
+          ToPort: 22
+      VpcId: !Ref VPC
