@@ -69,6 +69,11 @@ Resources:
           FromPort: 22
           IpProtocol: "tcp"
           ToPort: 22
+        - CidrIp: 0.0.0.0/0
+          Description: "HTTP"
+          FromPort: 80
+          IpProtocol: "tcp"
+          ToPort: 80
       VpcId: !Ref VPC
 
   # Web用のEC2
