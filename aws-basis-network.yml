@@ -6,7 +6,7 @@ Resources:
     Properties:
       CidrBlock: "10.0.0.0/16"
       EnableDnsSupport: true
-      EnableDnsHostnames: false
+      EnableDnsHostnames: true
       InstanceTenancy: "default"
       Tags:
         - Key: "Name"
@@ -69,11 +69,31 @@ Resources:
           FromPort: 22
           IpProtocol: "tcp"
           ToPort: 22
+        - CidrIp: 0.0.0.0/0
+          Description: "HTTP"
+          FromPort: 80
+          IpProtocol: "tcp"
+          ToPort: 80
       VpcId: !Ref VPC
 
   # Web用のEC2
   EC2ForWebServer:
     Type: AWS::EC2::Instance
+    Metadata:
+      Comment1: Install and bootstrap httpd
+      AWS::CloudFormation::Init:
+        configSets:
+          Install:
+            - Install
+        Install:
+          packages:
+            yum:
+              httpd: []
+          services:
+            sysvinit:
+              httpd:
+                enable: true
+                ensureRunning: true
     Properties:
       ImageId: "ami-a77c30c1"
       KeyName: "aws-network-basis"
@@ -96,3 +116,13 @@ Resources:
       Tags:
         - Key: Name
           Value: "aws-network-basis-cfn-web-server"
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash -xe
+            yum install -y aws-cfn-bootstrap
+            /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource EC2ForWebServer --configsets Install --region ${AWS::Region}
+            /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource EC2ForWebServer --region ${AWS::Region}
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT5M
