@@ -122,8 +122,6 @@ Resources:
             #!/bin/bash -xe
             yum install -y aws-cfn-bootstrap
             /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource EC2ForWebServer --configsets Install --region ${AWS::Region}
-            # Start up the cfn-hup daemon to listen for changes to the Web Server metadata
-            /opt/aws/bin/cfn-hup || error_exit 'Failed to start cfn-hup'
             /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource EC2ForWebServer --region ${AWS::Region}
     CreationPolicy:
       ResourceSignal:
