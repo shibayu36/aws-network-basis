@@ -18,6 +18,7 @@ Resources:
     Properties:
       CidrBlock: "10.0.1.0/24"
       MapPublicIpOnLaunch: false
+      AvailabilityZone: ap-northeast-1d
       Tags:
         - Key: "Name"
           Value: "aws-network-basis-cfn-public"
