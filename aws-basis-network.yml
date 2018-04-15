@@ -166,3 +166,29 @@ Resources:
     CreationPolicy:
       ResourceSignal:
         Timeout: PT5M
+
+  # DB用のEC2
+  EC2ForDBServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: "ami-a77c30c1"
+      KeyName: "aws-network-basis"
+      InstanceType: "t2.nano"
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: false
+          DeviceIndex: 0
+          DeleteOnTermination: true
+          PrivateIpAddress: 10.0.2.10
+          SubnetId: !Ref PrivateSubnet
+          GroupSet:
+            - !Ref SecurityGroupForDBServer
+      BlockDeviceMappings:
+        -
+          DeviceName: /dev/xvda
+          Ebs:
+            VolumeType: standard
+            VolumeSize: 8
+            DeleteOnTermination: true
+      Tags:
+        - Key: Name
+          Value: "aws-network-basis-cfn-db-server"
