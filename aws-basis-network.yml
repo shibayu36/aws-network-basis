@@ -24,6 +24,17 @@ Resources:
           Value: "aws-network-basis-cfn-public"
       VpcId: !Ref VPC
 
+  # VPC内でDBサーバ置く用のプライベートサブネット
+  PrivateSubnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      CidrBlock: "10.0.2.0/24"
+      AvailabilityZone: ap-northeast-1d
+      Tags:
+        - Key: "Name"
+          Value: "aws-network-basis-cfn-private"
+      VpcId: !Ref VPC
+
   # VPCで使うインターネットゲートウェイ
   InternetGateway:
     Type: "AWS::EC2::InternetGateway"
