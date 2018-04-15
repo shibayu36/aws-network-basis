@@ -86,6 +86,11 @@ Resources:
           FromPort: 80
           IpProtocol: "tcp"
           ToPort: 80
+        - CidrIp: 0.0.0.0/0
+          Description: "ICMP"
+          IpProtocol: "icmp"
+          FromPort: -1
+          ToPort: -1
       VpcId: !Ref VPC
 
   # Web用のEC2
