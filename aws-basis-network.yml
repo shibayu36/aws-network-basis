@@ -18,9 +18,21 @@ Resources:
     Properties:
       CidrBlock: "10.0.1.0/24"
       MapPublicIpOnLaunch: false
+      AvailabilityZone: ap-northeast-1d
       Tags:
         - Key: "Name"
           Value: "aws-network-basis-cfn-public"
+      VpcId: !Ref VPC
+
+  # VPC内でDBサーバ置く用のプライベートサブネット
+  PrivateSubnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      CidrBlock: "10.0.2.0/24"
+      AvailabilityZone: ap-northeast-1d
+      Tags:
+        - Key: "Name"
+          Value: "aws-network-basis-cfn-private"
       VpcId: !Ref VPC
 
   # VPCで使うインターネットゲートウェイ
@@ -74,6 +86,34 @@ Resources:
           FromPort: 80
           IpProtocol: "tcp"
           ToPort: 80
+        - CidrIp: 0.0.0.0/0
+          Description: "ICMP"
+          IpProtocol: "icmp"
+          FromPort: -1
+          ToPort: -1
+      VpcId: !Ref VPC
+  # DB用のセキュリティグループ
+  SecurityGroupForDBServer:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupName: "aws-network-basis-cfn-db-sg"
+      GroupDescription: "aws-network-basis-cfn SecurityGroup for db-server instance in private-subnet"
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          Description: "SSH"
+          IpProtocol: "tcp"
+          FromPort: 22
+          ToPort: 22
+        - CidrIp: 0.0.0.0/0
+          Description: "MySQL"
+          IpProtocol: "tcp"
+          FromPort: 3306
+          ToPort: 3306
+        - CidrIp: 0.0.0.0/0
+          Description: "ICMP"
+          IpProtocol: "icmp"
+          FromPort: -1
+          ToPort: -1
       VpcId: !Ref VPC
 
   # Web用のEC2
@@ -126,3 +166,29 @@ Resources:
     CreationPolicy:
       ResourceSignal:
         Timeout: PT5M
+
+  # DB用のEC2
+  EC2ForDBServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: "ami-a77c30c1"
+      KeyName: "aws-network-basis"
+      InstanceType: "t2.nano"
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: false
+          DeviceIndex: 0
+          DeleteOnTermination: true
+          PrivateIpAddress: 10.0.2.10
+          SubnetId: !Ref PrivateSubnet
+          GroupSet:
+            - !Ref SecurityGroupForDBServer
+      BlockDeviceMappings:
+        -
+          DeviceName: /dev/xvda
+          Ebs:
+            VolumeType: standard
+            VolumeSize: 8
+            DeleteOnTermination: true
+      Tags:
+        - Key: Name
+          Value: "aws-network-basis-cfn-db-server"
