@@ -1,0 +1,127 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  # 全てを入れるVPC
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: "10.0.0.0/16"
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: "default"
+      Tags:
+        - Key: "Name"
+          Value: "aws-network-basis-cfn"
+
+  # VPC内でインターネットに公開するサブネット
+  PublicSubnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      CidrBlock: "10.0.1.0/24"
+      MapPublicIpOnLaunch: false
+      AvailabilityZone: ap-northeast-1d
+      Tags:
+        - Key: "Name"
+          Value: "aws-network-basis-cfn-public"
+      VpcId: !Ref VPC
+
+  # VPC内でDBサーバ置く用のプライベートサブネット
+  PrivateSubnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      CidrBlock: "10.0.2.0/24"
+      AvailabilityZone: ap-northeast-1d
+      Tags:
+        - Key: "Name"
+          Value: "aws-network-basis-cfn-private"
+      VpcId: !Ref VPC
+
+  # VPCで使うインターネットゲートウェイ
+  InternetGateway:
+    Type: "AWS::EC2::InternetGateway"
+    Properties:
+      Tags:
+      - Key: "Name"
+        Value: "aws-network-basis-cfn-gateway"
+  AttachGateway:
+    Type: "AWS::EC2::VPCGatewayAttachment"
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  # パブリックサブネットがインターネットに繋がるようにする
+  PublicRouteTable:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: "aws-network-basis-cfn-public-route"
+  AddInternetGatewayToPublicRouteTable:
+    Type: "AWS::EC2::Route"
+    DependsOn: AttachGateway
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+      RouteTableId: !Ref PublicRouteTable
+  AttachPublicRouteTableToPublicSubnet:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet
+
+  # Web用のセキュリティグループ
+  SecurityGroupForWebServer:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupName: "aws-network-basis-cfn-web-sg"
+      GroupDescription: "aws-network-basis-cfn SecurityGroup for web-server instance in public-subnet"
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          Description: "SSH"
+          FromPort: 22
+          IpProtocol: "tcp"
+          ToPort: 22
+        - CidrIp: 0.0.0.0/0
+          Description: "HTTP"
+          FromPort: 80
+          IpProtocol: "tcp"
+          ToPort: 80
+        - CidrIp: 0.0.0.0/0
+          Description: "ICMP"
+          IpProtocol: "icmp"
+          FromPort: -1
+          ToPort: -1
+      VpcId: !Ref VPC
+  # Db用のセキュリティグループ
+  SecurityGroupForDBServer:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupName: "aws-network-basis-cfn-db-sg"
+      GroupDescription: "aws-network-basis-cfn SecurityGroup for db-server instance in private-subnet"
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          Description: "SSH"
+          IpProtocol: "tcp"
+          FromPort: 22
+          ToPort: 22
+        - CidrIp: 0.0.0.0/0
+          Description: "MySQL"
+          IpProtocol: "tcp"
+          FromPort: 3306
+          ToPort: 3306
+        - CidrIp: 0.0.0.0/0
+          Description: "ICMP"
+          IpProtocol: "icmp"
+          FromPort: -1
+          ToPort: -1
+      VpcId: !Ref VPC
+
+Outputs:
+  PublicSubnet:
+    Value: !Ref PublicSubnet
+    Export:
+      Name: aws-network-basis:PublicSubnet
+  SecurityGroupForWebServer:
+    Value: !Ref SecurityGroupForWebServer
+    Export:
+      Name: aws-network-basis:SecurityGroupForWebServer
